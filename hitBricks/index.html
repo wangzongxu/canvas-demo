@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style type="text/css">
+    *{
+      margin: 0;
+      padding: 0;
+    }
+    html,body{
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+</body>
+<script src="./model.js" charset="utf-8"></script>
+<script type="text/javascript">
+  var screen = document.body.getBoundingClientRect();
+  var HEIGHT = screen.height;
+  var WIDTH = screen.width;
+  var MARGINTOP = 1;  // 上边距
+  var MARGINLEFT = 1;  // 左边距
+  var FAIR = 32;
+  var curModel = window.brickModel[0];
+
+  // 砖块宽高 & 颜色
+  var bW = (WIDTH - (curModel[0].length) * 2) / curModel[0].length ; // 减去每一个左右间距为1
+  var bH = (HEIGHT - (curModel.length) * 2) / 2 / curModel.length ; // 宽高成等比例
+  var bColors = 'green';
+  var bricks = []; // 所有砖块
+  var canPushBricks = true; // 可以加入砖块到数组
+
+  // 木头宽高 & 初始坐标 & 颜色
+  var w = {
+    w: bW * 2,
+    h: bH / 1.5,
+    x: WIDTH / 2 - bW * 2 /2,
+    y: HEIGHT - bH / 1.5,
+    colors: 'black',
+    up: HEIGHT - bH / 1.5,
+    down: HEIGHT,
+    left: WIDTH / 2 - bW * 2 /2,
+    right: WIDTH / 2 - bW * 2 /2 + bW * 2
+  }
+
+  // 球半径 & 初始圆心坐标 & 颜色 & 运动数据
+  var c = {
+    r: bH / 2,
+    x: w.x + w.w / 2,
+    y: w.y - bH / 2,
+    colors: 'red',
+    xs: 1, // x 速度
+    ys: 1, // y 速度
+    up: w.y - bH / 2 - bH / 2,
+    down: w.y - bH / 2 + bH / 2,
+    left: w.x + w.w / 2 - bH / 2,
+    right: w.x + w.w / 2 + bH / 2
+  }
+
+  var canvas = document.getElementById('canvas');
+  var cxt = canvas.getContext('2d');
+  canvas.height = HEIGHT;
+  canvas.width = WIDTH;
+
+  // API兼容
+  window.animationFrame = (function(){
+    return  window.requestAnimationFrame       ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame    ||
+            window.msRequestAnimationFrame    ||
+            window.oRequestAnimationFrame    ||
+            function( callback ){
+              window.setTimeout(callback, 1000 / 60);
+            };
+  })();
+  window.cancelFrame = (function(){
+    return  window.cancelAnimationFrame       ||
+            window.webkitCancelAnimationFrame ||
+            window.mozCancelAnimationFrame    ||
+            window.msCancelAnimationFrame    ||
+            window.oCancelAnimationFrame    ||
+            function( id ){
+              window.clearTimeout(id);
+            };
+  })();
+
+  // 初始化位置
+  init(cxt);
+  function init(cxt){
+    drawBrick(cxt, curModel);
+    drawWood(cxt, w);
+    drawGlobe(cxt, c);
+  }
+
+
+  // 动画开始
+  function go(cxt){
+    animationFrame(function(){
+      cxt.clearRect(0, 0, cxt.canvas.width, cxt.canvas.height);
+      drawBrick(cxt, curModel);
+
+      runingWood(cxt, w);
+      runingGlobe(cxt, c);
+
+      if(a){
+        go(cxt);
+      }
+    })
+  }
+
+  // 绘制砖块
+  function drawBrick(cxt, model){
+    var y = 0;
+    var x = 0;
+    for(var i = 0; i < model.length; i ++){
+      var row = model[i];
+      for(var j = 0; j < row.length; j ++){
+        var brick = row[j];
+        if(brick){
+          rect(cxt, x + MARGINLEFT, y + MARGINTOP, bW, bH, bColors);
+          if(canPushBricks){
+            bricks.push({
+              x: x + MARGINLEFT,
+              y: y + MARGINTOP,
+              w: bW,
+              h: bH,
+              color: bColors,
+              up: y + MARGINTOP,
+              down: y + MARGINTOP + bH,
+              left: x + MARGINLEFT,
+              right: x + MARGINLEFT + bW
+            });
+          }
+        }
+        x += bW + 2;
+      }
+      x = 0;
+      y += bH + 2; // 方块上下间隔一像素
+    }
+    y = 0;
+    canPushBricks = false; // 只添加一次
+  }
+
+  // 绘制木板
+  function drawWood(cxt, w){
+    rect(cxt, w.x, w.y, w.w, w.h, w.colors);
+  }
+  function runingWood(cxt, w){
+    drawWood(cxt, w);
+  }
+  // 绘制球
+  function drawGlobe(cxt, c){
+    circle(cxt, c.x, c.y, c.r, c.colors);
+  }
+  function runingGlobe(cxt,c){
+    c.x -= c.xs;
+    c.y -= c.ys;
+
+    c.up = c.y - c.r;
+    c.left = c.x - c.r;
+    c.right = c.x + c.r;
+    c.down = c.y + c.r;
+
+    for(var i = 0; i < bricks.length; i++){
+      var brick = bricks[i];
+      isCollision = collision(c, bricks);
+      // if(isCollision.x){
+      //   c.xs *= -1;
+      // }
+      if( c.up <= 0 || c.down > HEIGHT){
+        c.ys *= -1;
+        c.y = 0;
+        console.log(4)
+      }
+    }
+    drawGlobe(cxt, c);
+  }
+  // 事件绑定
+
+    document.body.addEventListener('keydown', function(e){
+      e.preventDefault();
+      if(e.keyCode === 13){
+        a=false;
+        console.log(bricks,c)
+      }
+    })
+
+  // 检测小球p1与物体碰撞
+  function collision(p1, p2,f){
+    var collisioned = {
+      x: false,
+      y: false
+    }
+    // y
+    if(p1.up < p2.down && p1.up > p2.up && ( (p1.left > p2.left && p1.left < p2.right) || (p1.right > p2.left && p1.right < p2.right) )){ // p1上边碰撞底边
+      collisioned.y = true;
+    }else if(p1.down > p2.up && p1.down < p2.down && ( (p1.left > p2.left && p1.left < p2.right) || (p1.right > p2.left && p1.right < p2.right) ) ){ // p1下边碰撞上边
+      collisioned.y = true;
+    }else if(p1.up <= 0 || p1.down > HEIGHT){
+      collisioned.y = true;
+    }
+    // x
+    if(p1.left < p2.right && p1.left > p2.left && ( (p1.up < p2.down && p1.up > p2.up) || (p1.down > p2.up && p1.down < p2.down) ) ){ // p1左边碰撞右边
+      collisioned.x = true;
+    }else if(p1.right > p2.left && p1.right < p2.right && ( (p1.up < p2.down && p1.up > p2.up) || (p1.down > p2.up && p1.down < p2.down) ) ){ // p1右边碰撞左边
+      collisioned.x = true;
+    }else if(p1.left <= 0 || p1.right > WIDTH){
+      collisioned.x = true;
+    }
+    return collisioned
+  }
+
+  // 绘制矩形
+  function rect(cxt, x1, y1, x2, y2, color){
+    cxt.beginPath();
+    cxt.rect(x1, y1, x2, y2);
+    cxt.fillStyle = color || 'black';
+    cxt.fill()
+  }
+
+  // 绘制圈
+  function circle(cxt, x, y, r, color) {
+      cxt.beginPath();
+      cxt.arc(x, y, r, 0, 2 * Math.PI, false);
+      cxt.fillStyle = color;
+      cxt.fill();
+  }
+
+  // 事件绑定
+  function bindEvent(cxt) {
+    document.body.addEventListener('keydown', function(e){
+      e.preventDefault();
+      if(e.keyCode === FAIR){
+          a=true;
+        go(cxt);
+      }
+    })
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    init(cxt);
+    bindEvent(cxt);
+  })
+</script>
+</html>
