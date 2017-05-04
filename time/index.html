@@ -117,7 +117,7 @@
                     var ball = {
                         x: singleNumSpecing + MARGINLEFT + spacingX,
                         y: 0 + MARGINTOP + spacingY,
-                        xs: Math.random() > 0.5 ? 3 : -3, // 滚动速度 -4 或 4
+                        xs: Math.random() > 0.5 ? 3 : -3, // 滚动速度 -3 或 3
                         ys: -1 * (Math.random() * 5), // 下落速度 -5 - 5
                         g: G,
                         r: r,
@@ -125,7 +125,7 @@
                         color: colors[Math.round(Math.random() * colors.length)]
                     };
                     var temp = compareTime(preDrawTime);
-                    if (flag && temp && !temp[flag]) { // 绘制的某一位发生了变化
+                    if (!temp || (flag && !temp[flag])) { // 第一次全部掉落 || 绘制的某一位发生了变化
                         balls.push(ball);
                     }
                 }
