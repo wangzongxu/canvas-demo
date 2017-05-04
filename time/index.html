@@ -38,7 +38,7 @@
     var MARGINTOP = box.height / 3;
     var MARGINLEFT = box.width / 10;
     var R = box.width * 0.0082; // 小圆半径
-    var G = 2 // 掉落加速度
+    var G = 0.5 // 掉落加速度
     var MS = 0.5 // 掉落摩擦
     var INTERVAL = 50 // 帧率
     var TIMECOLOR = '#9BCCFF';
@@ -52,15 +52,28 @@
     canvas.height = HEIGHT;
     var cxt = canvas.getContext('2d');
 
-    // 开启定时器动画
-    setInterval(start, INTERVAL)
+    // API兼容
+    window.requestAnimFrame = (function(){
+      return  window.requestAnimationFrame       ||
+              window.webkitRequestAnimationFrame ||
+              window.mozRequestAnimationFrame    ||
+              window.msRequestAnimationFrame    ||
+              window.oRequestAnimationFrame    ||
+              function( callback ){
+                window.setTimeout(callback, 1000 / 60);
+              };
+    })();
 
-    // 开始
-    function start() {
-        cxt.clearRect(0, 0, cxt.canvas.width, cxt.canvas.height); // 清空画板
-        drawWatch();
-        drop();
-        preDrawTime = nowTime()
+    // 开启定时器动画
+    start();
+    function start(){
+      requestAnimFrame(function() {
+          cxt.clearRect(0, 0, cxt.canvas.width, cxt.canvas.height); // 清空画板
+          drawWatch();
+          drop();
+          preDrawTime = nowTime();
+          start();
+      })
     }
 
     // 小球下落位置计算
@@ -117,7 +130,7 @@
                     var ball = {
                         x: singleNumSpecing + MARGINLEFT + spacingX,
                         y: 0 + MARGINTOP + spacingY,
-                        xs: Math.random() > 0.5 ? 3 : -3, // 滚动速度 -3 或 3
+                        xs: Math.random() > 0.5 ? 2 : -2, // 滚动速度 -2 或 2
                         ys: -1 * (Math.random() * 5), // 下落速度 -5 - 5
                         g: G,
                         r: r,
