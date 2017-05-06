@@ -32,6 +32,7 @@
 </html>
 <script src="./time.js"></script>
 <script>
+    // 代码风格，随意而写：
     var box = document.body.getBoundingClientRect();
     var WIDTH = box.width;
     var HEIGHT = box.height;
@@ -40,18 +41,18 @@
     var R = box.width * 0.0082; // 小圆半径
     var G = 0.5 // 掉落加速度
     var MS = 0.7 // 掉落摩擦
-    var rollX = function(speed){
+    var readyRollX = function(speed){
       return function() {
         return Math.random() > 0.5 ? speed : -speed;
       }
     }
-    var dropY = function(speed){
+    var readyDropY = function(speed){
       return function() {
         return Math.random() * speed;
       }
     }
-    rollX = rollX(2); // 滚动速度 -2 或 2
-    dropY = dropY(-4); // 下落速度 -4 - 0
+    var rollX = readyRollX(2); // 滚动速度 -2 或 2
+    var dropY = readyDropY(-4); // 下落速度 -4 - 0
     var TIMECOLOR = '#9BCCFF';
     var colors = ['palegoldenrod', 'paleturquoise', 'palegreen', 'palevioletred', 'papayawhip', 'peachpuff', 'peru', 'pink', 'powderblue', 'purple', 'deeppink', 'springgreen']; // 掉落小球随即颜色
     var singleNumSpecing = 0; // 用于计算数字间距
@@ -64,13 +65,12 @@
     var cxt = canvas.getContext('2d');
 
     (function screen() {
-      if(/Mobile/.test(window.navigator.userAgent)){
-        if (window.orientation === 180 || window.orientation === 0) { // 竖屏
-            G = 0.2;
-            rollX = rollX(1);
-            dropY = dropY(2);
-            alert('hengping')
-        }
+      if(/Mobile/i.test(window.navigator.userAgent)){
+       if (window.orientation === 180 || window.orientation === 0) { // 竖屏
+          G = 0.2;
+          rollX = readyRollX(0.5);
+          dropY = readyDropY(-2);
+       }
       }
     })();
 
