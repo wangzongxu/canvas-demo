@@ -39,7 +39,7 @@
     var MARGINLEFT = box.width / 10;
     var R = box.width * 0.0082; // 小圆半径
     var G = 0.5 // 掉落加速度
-    var MS = 0.5 // 掉落摩擦
+    var MS = 0.7 // 掉落摩擦
     var INTERVAL = 50 // 帧率
     var TIMECOLOR = '#9BCCFF';
     var colors = ['palegoldenrod', 'paleturquoise', 'palegreen', 'palevioletred', 'papayawhip', 'peachpuff', 'peru', 'pink', 'powderblue', 'purple', 'deeppink', 'springgreen']; // 掉落小球随即颜色
@@ -131,7 +131,7 @@
                         x: singleNumSpecing + MARGINLEFT + spacingX,
                         y: 0 + MARGINTOP + spacingY,
                         xs: Math.random() > 0.5 ? 2 : -2, // 滚动速度 -2 或 2
-                        ys: -1 * (Math.random() * 5), // 下落速度 -5 - 5
+                        ys: -1 * (Math.random() * 4), // 下落速度 -4 - 4
                         g: G,
                         r: r,
                         ms: MS,
