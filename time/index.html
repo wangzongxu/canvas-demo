@@ -77,7 +77,7 @@
     function reload(){
       window.location.reload()
     }
-    window.addEventListener("onorientationchange" in window ? "orientationchange" : "resize", reload, false);
+    window.addEventListener('orientationchange', reload, false);
 
     // API兼容
     window.requestAnimFrame = (function(){
