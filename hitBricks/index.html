@@ -27,41 +27,37 @@
   var WIDTH = screen.width;
   var MARGINTOP = 1;  // 上边距
   var MARGINLEFT = 1;  // 左边距
-  var FAIR = 32;
+  var SPACE = 32;
+  var ENTER = 13;
+  var UP = 38;
+  var LEFT = 37;
+  var RIGHT = 39;
+  var DOWN = 40;
   var curModel = window.brickModel[0];
 
   // 砖块宽高 & 颜色
   var bW = (WIDTH - (curModel[0].length) * 2) / curModel[0].length ; // 减去每一个左右间距为1
   var bH = (HEIGHT - (curModel.length) * 2) / 2 / curModel.length ; // 宽高成等比例
-  var bColors = 'green';
+  var bColors = 'rgb(153,209,210)';
   var bricks = []; // 所有砖块
-  var canPushBricks = true; // 可以加入砖块到数组
 
   // 木头宽高 & 初始坐标 & 颜色
   var w = {
-    w: bW * 2,
-    h: bH / 1.5,
-    x: WIDTH / 2 - bW * 2 /2,
-    y: HEIGHT - bH / 1.5,
-    colors: 'black',
-    up: HEIGHT - bH / 1.5,
-    down: HEIGHT,
-    left: WIDTH / 2 - bW * 2 /2,
-    right: WIDTH / 2 - bW * 2 /2 + bW * 2
+    w: WIDTH / 5,
+    h: bH / 2,
+    x: WIDTH / 2 - WIDTH / 5 /2,
+    y: HEIGHT - bH / 2,
+    colors: 'rgb(243,179,108)'
   }
 
   // 球半径 & 初始圆心坐标 & 颜色 & 运动数据
   var c = {
-    r: bH / 2,
+    r: bH / 4,
     x: w.x + w.w / 2,
-    y: w.y - bH / 2,
-    colors: 'red',
-    xs: 1, // x 速度
-    ys: 1, // y 速度
-    up: w.y - bH / 2 - bH / 2,
-    down: w.y - bH / 2 + bH / 2,
-    left: w.x + w.w / 2 - bH / 2,
-    right: w.x + w.w / 2 + bH / 2
+    y: w.y - bH / 4,
+    colors: 'rgb(229,71,70)',
+    xs: 2, // x 速度
+    ys: 2, // y 速度
   }
 
   var canvas = document.getElementById('canvas');
@@ -80,43 +76,48 @@
               window.setTimeout(callback, 1000 / 60);
             };
   })();
-  window.cancelFrame = (function(){
-    return  window.cancelAnimationFrame       ||
-            window.webkitCancelAnimationFrame ||
-            window.mozCancelAnimationFrame    ||
-            window.msCancelAnimationFrame    ||
-            window.oCancelAnimationFrame    ||
-            function( id ){
-              window.clearTimeout(id);
-            };
-  })();
 
-  // 初始化位置
-  init(cxt);
+  // 初始化
   function init(cxt){
-    drawBrick(cxt, curModel);
+    clearAll(cxt);
+    initBrick(cxt, curModel);
+    drawBrick(cxt, bricks);
     drawWood(cxt, w);
     drawGlobe(cxt, c);
   }
 
-
   // 动画开始
   function go(cxt){
     animationFrame(function(){
-      cxt.clearRect(0, 0, cxt.canvas.width, cxt.canvas.height);
-      drawBrick(cxt, curModel);
+      clearAll(cxt);
+      drawBrick(cxt, bricks);
 
       runingWood(cxt, w);
       runingGlobe(cxt, c);
-
-      if(a){
+      if(bricks.length===0){
+        alert('胜利');
+        window.location.reload();
+      }
+      if(window.canGo){
         go(cxt);
       }
     })
   }
 
-  // 绘制砖块
-  function drawBrick(cxt, model){
+  // 清空
+  function clearAll(cxt){
+    cxt.clearRect(0, 0, cxt.canvas.width, cxt.canvas.height);
+  }
+
+  function drawBrick(cxt,bricks){
+    for (var i = 0; i < bricks.length; i++) {
+      var brick = bricks[i];
+      rect(cxt, brick.x + MARGINLEFT, brick.y + MARGINTOP, brick.w, brick.h, brick.color);
+    }
+  }
+  // 初始化砖块数量和坐标
+  function initBrick(cxt, model){
+    if(bricks.length > 0)return; // 只添加一次
     var y = 0;
     var x = 0;
     for(var i = 0; i < model.length; i ++){
@@ -124,20 +125,13 @@
       for(var j = 0; j < row.length; j ++){
         var brick = row[j];
         if(brick){
-          rect(cxt, x + MARGINLEFT, y + MARGINTOP, bW, bH, bColors);
-          if(canPushBricks){
-            bricks.push({
-              x: x + MARGINLEFT,
-              y: y + MARGINTOP,
-              w: bW,
-              h: bH,
-              color: bColors,
-              up: y + MARGINTOP,
-              down: y + MARGINTOP + bH,
-              left: x + MARGINLEFT,
-              right: x + MARGINLEFT + bW
-            });
-          }
+          bricks.push({
+            x: x + MARGINLEFT,
+            y: y + MARGINTOP,
+            w: bW,
+            h: bH,
+            color: bColors
+          });
         }
         x += bW + 2;
       }
@@ -145,7 +139,6 @@
       y += bH + 2; // 方块上下间隔一像素
     }
     y = 0;
-    canPushBricks = false; // 只添加一次
   }
 
   // 绘制木板
@@ -163,58 +156,67 @@
     c.x -= c.xs;
     c.y -= c.ys;
 
-    c.up = c.y - c.r;
-    c.left = c.x - c.r;
-    c.right = c.x + c.r;
-    c.down = c.y + c.r;
+    collisionOf(c,w);
+    collisionWall(c);
 
     for(var i = 0; i < bricks.length; i++){
       var brick = bricks[i];
-      isCollision = collision(c, bricks);
-      // if(isCollision.x){
-      //   c.xs *= -1;
-      // }
-      if( c.up <= 0 || c.down > HEIGHT){
-        c.ys *= -1;
-        c.y = 0;
-        console.log(4)
+      var isCollisioned = false;
+      collisionOf(c, brick, function(){
+        isCollisioned = true;
+        bricks.splice(i, 1);
+      });
+      if(isCollisioned){
+        break;
       }
     }
     drawGlobe(cxt, c);
   }
-  // 事件绑定
 
-    document.body.addEventListener('keydown', function(e){
-      e.preventDefault();
-      if(e.keyCode === 13){
-        a=false;
-        console.log(bricks,c)
+  // 处理碰撞木板
+  function collisionOf(c, w, cb){
+    var r = c.r;
+    if(c.x + r > w.x && c.x - r < w.x + w.w && c.y + r > w.y && c.y - r < w.y + w.h){ // 碰撞到了
+      var top = c.y + r - w.y; //与木头顶边距离
+      var left = c.x + r - w.x; //与木头左边距离
+      var right = w.x + w.w - c.x - r; //与木头右边距离
+      var bottom = w.y + w.h - c.y - r; // 与木头底边距离
+      var min = Math.min(bottom,left,right,top);
+      if(min === top){ // 底边
+        c.ys = -c.ys;
+        c.y = w.y - r;
+      }else if(min === bottom){ // 底
+        c.ys = -c.ys;
+        c.y = w.y + w.h + r;
+      }else if(min === left){ // 左
+        c.xs = -c.xs;
+        c.x = w.x - r;
+      }else if(min === right){ // 右
+        c.xs = -c.xs;
+        c.x = w.x + w.w + r;
       }
-    })
+      cb && cb();
+    }
+  }
 
-  // 检测小球p1与物体碰撞
-  function collision(p1, p2,f){
-    var collisioned = {
-      x: false,
-      y: false
+  // 处理碰撞墙壁
+  function collisionWall(c){
+    var r = c.r;
+    if( c.y - r < 0){
+      c.ys = -c.ys;
+      c.y = 0 + r;
+    }else if(c.y + r > HEIGHT){
+      c.ys = -c.ys;
+      c.y = HEIGHT - r;
+      over();
     }
-    // y
-    if(p1.up < p2.down && p1.up > p2.up && ( (p1.left > p2.left && p1.left < p2.right) || (p1.right > p2.left && p1.right < p2.right) )){ // p1上边碰撞底边
-      collisioned.y = true;
-    }else if(p1.down > p2.up && p1.down < p2.down && ( (p1.left > p2.left && p1.left < p2.right) || (p1.right > p2.left && p1.right < p2.right) ) ){ // p1下边碰撞上边
-      collisioned.y = true;
-    }else if(p1.up <= 0 || p1.down > HEIGHT){
-      collisioned.y = true;
+    if(c.x - r < 0){
+      c.xs = -c.xs;
+      c.x = 0 + r;
+    }else if(c.x + r > WIDTH){
+      c.xs = -c.xs;
+      c.x = WIDTH - r;
     }
-    // x
-    if(p1.left < p2.right && p1.left > p2.left && ( (p1.up < p2.down && p1.up > p2.up) || (p1.down > p2.up && p1.down < p2.down) ) ){ // p1左边碰撞右边
-      collisioned.x = true;
-    }else if(p1.right > p2.left && p1.right < p2.right && ( (p1.up < p2.down && p1.up > p2.up) || (p1.down > p2.up && p1.down < p2.down) ) ){ // p1右边碰撞左边
-      collisioned.x = true;
-    }else if(p1.left <= 0 || p1.right > WIDTH){
-      collisioned.x = true;
-    }
-    return collisioned
   }
 
   // 绘制矩形
@@ -233,15 +235,72 @@
       cxt.fill();
   }
 
+  // 结束
+  function over(){
+    alert('游戏结束');
+    window.location.reload();
+  }
+
   // 事件绑定
   function bindEvent(cxt) {
-    document.body.addEventListener('keydown', function(e){
-      e.preventDefault();
-      if(e.keyCode === FAIR){
-          a=true;
-        go(cxt);
+
+    // 开始
+    on(UP, goUp);
+    function goUp(){
+      if(window.canGo)return;
+      window.canGo=true;
+      go(cxt);
+    }
+
+    // 停止
+    on(DOWN, function(){
+      window.canGo=false;
+    });
+
+    // 左移动
+    on(LEFT, goLeft);
+    function goLeft(){
+      if(w.x <= 0)return;
+      w.x-=30;
+      if(!window.canGo){
+        c.x-=30;
+        init(cxt);
+      };
+    }
+    // 右移动
+    on(RIGHT, goRight);
+    function goRight(){
+      if(w.x + w.w >= WIDTH)return;
+      w.x+=30;
+      if(!window.canGo){
+        c.x+=30;
+        init(cxt);
+      };
+    }
+    // 移动端
+    canvas.addEventListener('touchend',function(e){
+      var x = e.changedTouches[0].pageX;
+      var y = e.changedTouches[0].pageY;
+      if(y > HEIGHT / 2){ // 下半屏幕
+        if(x > WIDTH / 2){ // 左右移动
+          goRight();
+        }else{
+          goLeft();
+        }
+      }else{
+        goUp();
       }
     })
+
+    // 键盘按下
+    function on(keyCode,cb){
+      document.body.addEventListener('keydown', function(e){
+        e.preventDefault();
+        if(e.keyCode === keyCode){
+          cb();
+        }
+      })
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function(){
