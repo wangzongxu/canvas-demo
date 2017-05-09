@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>hitBricks</title>
   <style type="text/css">
     *{
       margin: 0;
@@ -28,6 +28,20 @@
       text-align: center;
       color: #607D8B
     }
+    .again{
+      width: 100%;
+      height: 50px;
+      line-height: 50px;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 20%;
+      margin: auto;
+      font-size: xx-large;
+      text-align: center;
+      color: #607D8B;
+      background: rgba(153, 209, 210, 0.38)
+    }
     .hide{
       display: none
     }
@@ -36,11 +50,13 @@
 <body>
   <canvas id="canvas"></canvas>
   <p class="msg hide"></p>
+  <p class="again hide">再次挑战</p>
 </body>
 <script src="./model.js" charset="utf-8"></script>
 <script type="text/javascript">
   var screen = document.body.getBoundingClientRect();
   var MSG = document.querySelector('.msg');
+  var AGAIN = document.querySelector('.again');
   var HEIGHT = screen.height;
   var WIDTH = screen.width;
   var MARGINTOP = 1;  // 上边距
@@ -132,15 +148,11 @@
   // 下一关
   function nextModel(){
     window.canGo = false;
-    INDEX ++;
-    curModel = window.brickModel[INDEX];
-    if(!curModel){ // 没有模板了
-      cancelEvent();
-      MSG.innerHTML = '冲破全关！您成功打掉' + SUM + '个砖块';
-      MSG.classList.remove('hide');
-      return;
+    curModel = window.brickModel[++ INDEX];
+    if(!curModel){ // 没有模板了从第一个开始
+      INDEX = 0;
+      curModel = window.brickModel[INDEX];
     }
-
     // 初始化木块位置
     w.w = WIDTH / 5;
     w.h = bH / 2;
@@ -377,26 +389,30 @@
   function over(){
     window.canGo = false;
     cancelEvent();
-    if(SUM<20){
-      MSG.innerHTML = '游戏结束！您仅仅打掉了' + SUM + '个砖块，加加油！';
+    var str = '';
+    if(SUM<25){
+      str = '我仅仅打掉了' + SUM + '个砖块，加加油！';
     }else if(SUM<50){
-      MSG.innerHTML = '游戏结束！您仅打掉了' + SUM + '个砖块，加油！';
+      str = '我仅打掉了' + SUM + '个砖块，加油！';
+    }else if(SUM<75){
+      str = '我打掉了' + SUM + '个砖块，快可以做点什么了';
     }else if(SUM<100){
-      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，快可以做点什么了';
+      str = '我打掉了' + SUM + '个砖块，可以为汪星人盖一个家';
+    }else if(SUM<125){
+      str = '我打掉了' + SUM + '个砖块，可以盖一个洗手间';
     }else if(SUM<150){
-      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以为汪星人盖一个家';
+      str = '我打掉了' + SUM + '个砖块，可以盖一个单人间';
+    }else if(SUM<175){
+      str = '我打掉了' + SUM + '个砖块，可以盖一个双人间';
     }else if(SUM<200){
-      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以盖一个洗手间';
-    }else if(SUM<250){
-      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以盖一个单人间';
-    }else if(SUM<300){
-      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以盖一个双人间';
-    }else if(SUM<350){
-      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以盖一个三人间';
-    }else if(SUM>=520){
-      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以盖一个温暖的家';
+      str = '我打掉了' + SUM + '个砖块，可以盖一个三人间';
+    }else if(SUM>=225){
+      str = '我打掉了' + SUM + '个砖块，可以盖一个温暖的家';
     }
+    document.title = str;
+    MSG.innerHTML = str;
     MSG.classList.remove('hide');
+    AGAIN.classList.remove('hide');
   }
 
   // 事件列表
@@ -411,9 +427,9 @@
     goLeft:function (e){
       if(e.keyCode === LEFT || e === 'touch'){
         if(w.x <= 0)return;
-        w.x-=30;
+        w.x -= w.w * 0.4;
         if(!window.canGo){
-          c.x-=30;
+          c.x -= w.w * 0.4;
           init(cxt);
         };
       }
@@ -421,9 +437,9 @@
     goRight:function (e){
       if(e.keyCode === RIGHT || e === 'touch'){
         if(w.x + w.w >= WIDTH)return;
-        w.x+=30;
+        w.x += w.w * 0.4;
         if(!window.canGo){
-          c.x+=30;
+          c.x += w.w * 0.4;
           init(cxt);
         };
       }
@@ -455,6 +471,10 @@
     ['goUp', 'stop', 'goLeft', 'goRight'].forEach(function(item){
       document.body.addEventListener('keydown', eventMap[item]);
     });
+    // 再来一次
+    AGAIN.addEventListener('click',function(){
+      window.location.reload();
+    })
   }
 
   // 取消事件监听
