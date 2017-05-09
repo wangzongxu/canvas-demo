@@ -33,13 +33,18 @@
   var LEFT = 37;
   var RIGHT = 39;
   var DOWN = 40;
+  var SUM = 0; // 打掉砖块数
   var curModel = window.brickModel[0];
 
   // 砖块宽高 & 颜色
   var bW = (WIDTH - (curModel[0].length) * 2) / curModel[0].length ; // 减去每一个左右间距为1
   var bH = (HEIGHT - (curModel.length) * 2) / 2 / curModel.length ; // 宽高成等比例
-  var bColors = 'rgb(153,209,210)';
   var bricks = []; // 所有砖块
+  var bricksColors = {
+    1: 'rgb(153,209,210)',// 正常砖块 标识 1
+    2: 'rgba(255, 53, 85, 0.88)', // 加速砖块 标识 2
+    3: 'rgba(28, 179, 26, 0.41)', // 减速砖块 标识 3
+  }
 
   // 木头宽高 & 初始坐标 & 颜色
   var w = {
@@ -95,7 +100,7 @@
       runingWood(cxt, w);
       runingGlobe(cxt, c);
       if(bricks.length===0){
-        alert('胜利');
+        alert('过关！您成功打掉' + SUM + '个砖块');
         window.location.reload();
       }
       if(window.canGo){
@@ -109,12 +114,14 @@
     cxt.clearRect(0, 0, cxt.canvas.width, cxt.canvas.height);
   }
 
+  // 砖块绘制
   function drawBrick(cxt,bricks){
     for (var i = 0; i < bricks.length; i++) {
       var brick = bricks[i];
       rect(cxt, brick.x + MARGINLEFT, brick.y + MARGINTOP, brick.w, brick.h, brick.color);
     }
   }
+
   // 初始化砖块数量和坐标
   function initBrick(cxt, model){
     if(bricks.length > 0)return; // 只添加一次
@@ -130,7 +137,7 @@
             y: y + MARGINTOP,
             w: bW,
             h: bH,
-            color: bColors
+            color: bricksColors[brick]
           });
         }
         x += bW + 2;
@@ -145,13 +152,18 @@
   function drawWood(cxt, w){
     rect(cxt, w.x, w.y, w.w, w.h, w.colors);
   }
-  function runingWood(cxt, w){
-    drawWood(cxt, w);
-  }
+
   // 绘制球
   function drawGlobe(cxt, c){
     circle(cxt, c.x, c.y, c.r, c.colors);
   }
+
+  // 木头运动处理
+  function runingWood(cxt, w){
+    drawWood(cxt, w);
+  }
+
+  // 球的运动处理
   function runingGlobe(cxt,c){
     c.x -= c.xs;
     c.y -= c.ys;
@@ -164,6 +176,8 @@
       var isCollisioned = false;
       collisionOf(c, brick, function(){
         isCollisioned = true;
+        SUM += 1;
+        brickEffect(brick.color);
         bricks.splice(i, 1);
       });
       if(isCollisioned){
@@ -173,15 +187,55 @@
     drawGlobe(cxt, c);
   }
 
-  // 处理碰撞木板
+  // 处理砖块种类效果
+  function brickEffect(color){
+    switch (color) {
+      case bricksColors[2]:
+        speed(c);
+        break;
+      case bricksColors[3]:
+        lazy(c);
+        break;
+    }
+
+    // 加速2倍
+    function speed(c){
+      c.xs *= 2;
+      c.ys *= 2;
+        console.log(c.xs)
+      setTimeout(function(){
+        c.xs /= 2;
+        c.ys /= 2;
+        console.log(c.xs)
+      },7000)
+    }
+
+    // 减速2倍
+    function lazy(c){
+      c.xs /= 2;
+      c.ys /= 2;
+      setTimeout(function(){
+        c.xs *= 2;
+        c.ys *= 2;
+      },7000)
+    }
+  }
+
+  // 处理碰撞除墙壁外的物体
   function collisionOf(c, w, cb){
     var r = c.r;
     if(c.x + r > w.x && c.x - r < w.x + w.w && c.y + r > w.y && c.y - r < w.y + w.h){ // 碰撞到了
       var top = c.y + r - w.y; //与木头顶边距离
       var left = c.x + r - w.x; //与木头左边距离
-      var right = w.x + w.w - c.x - r; //与木头右边距离
-      var bottom = w.y + w.h - c.y - r; // 与木头底边距离
+      var right = w.x + w.w - c.x + r; //与木头右边距离
+      var bottom = w.y + w.h - c.y + r; // 与木头底边距离
       var min = Math.min(bottom,left,right,top);
+      console.log({
+        top:top,
+        bottom:bottom,
+        left:left,
+        right:right
+      })
       if(min === top){ // 底边
         c.ys = -c.ys;
         c.y = w.y - r;
@@ -237,7 +291,7 @@
 
   // 结束
   function over(){
-    alert('游戏结束');
+    alert('游戏结束！您仅仅打掉' + SUM + '个砖块');
     window.location.reload();
   }
 
