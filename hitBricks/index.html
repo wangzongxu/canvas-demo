@@ -89,6 +89,7 @@
     drawBrick(cxt, bricks);
     drawWood(cxt, w);
     drawGlobe(cxt, c);
+    // flyAlert(cxt,'哈哈')
   }
 
   // 动画开始
@@ -100,6 +101,7 @@
       runingWood(cxt, w);
       runingGlobe(cxt, c);
       if(bricks.length===0){
+        window.canGo = false;
         alert('过关！您成功打掉' + SUM + '个砖块');
         window.location.reload();
       }
@@ -187,6 +189,15 @@
     drawGlobe(cxt, c);
   }
 
+  // 提示信息
+  function flyAlert(cxt,msg){
+    cxt.beginPath();
+    cxt.strokeStyle = 'red';
+    cxt.font = 'large Airal';
+    cxt.textAlign = 'right';
+    cxt.fillText(msg,WIDTH/2,HEIGHT/2);
+  }
+
   // 处理砖块种类效果
   function brickEffect(color){
     switch (color) {
@@ -202,11 +213,9 @@
     function speed(c){
       c.xs *= 2;
       c.ys *= 2;
-        console.log(c.xs)
       setTimeout(function(){
         c.xs /= 2;
         c.ys /= 2;
-        console.log(c.xs)
       },7000)
     }
 
@@ -291,6 +300,7 @@
 
   // 结束
   function over(){
+    window.canGo = false;
     alert('游戏结束！您仅仅打掉' + SUM + '个砖块');
     window.location.reload();
   }
