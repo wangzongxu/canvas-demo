@@ -15,14 +15,32 @@
       height: 100%;
       overflow: hidden;
     }
+    .msg{
+      width: 100%;
+      height: 100px;
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      margin: auto;
+      font-size: xx-large;
+      text-align: center;
+      color: #607D8B
+    }
+    .hide{
+      display: none
+    }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
+  <p class="msg hide"></p>
 </body>
 <script src="./model.js" charset="utf-8"></script>
 <script type="text/javascript">
   var screen = document.body.getBoundingClientRect();
+  var MSG = document.querySelector('.msg');
   var HEIGHT = screen.height;
   var WIDTH = screen.width;
   var MARGINTOP = 1;  // 上边距
@@ -34,7 +52,8 @@
   var RIGHT = 39;
   var DOWN = 40;
   var SUM = 0; // 打掉砖块数
-  var curModel = window.brickModel[0];
+  var INDEX = 0; // 砖块模板
+  var curModel = window.brickModel[INDEX];
 
   // 砖块宽高 & 颜色
   var bW = (WIDTH - (curModel[0].length) * 2) / curModel[0].length ; // 减去每一个左右间距为1
@@ -44,6 +63,8 @@
     1: 'rgb(153,209,210)',// 正常砖块 标识 1
     2: 'rgba(255, 53, 85, 0.88)', // 加速砖块 标识 2
     3: 'rgba(28, 179, 26, 0.41)', // 减速砖块 标识 3
+    4: 'rgba(0, 153, 235, 0.55)', // 加长模板 标识 4
+    5: 'rgba(170, 172, 184, 0.72)', // 缩短模板 标识 5
   }
 
   // 木头宽高 & 初始坐标 & 颜色
@@ -89,7 +110,6 @@
     drawBrick(cxt, bricks);
     drawWood(cxt, w);
     drawGlobe(cxt, c);
-    // flyAlert(cxt,'哈哈')
   }
 
   // 动画开始
@@ -101,14 +121,35 @@
       runingWood(cxt, w);
       runingGlobe(cxt, c);
       if(bricks.length===0){
-        window.canGo = false;
-        alert('过关！您成功打掉' + SUM + '个砖块');
-        window.location.reload();
+        nextModel();
       }
       if(window.canGo){
         go(cxt);
       }
     })
+  }
+
+  // 下一关
+  function nextModel(){
+    window.canGo = false;
+    INDEX ++;
+    curModel = window.brickModel[INDEX];
+    if(!curModel){ // 没有模板了
+      cancelEvent();
+      MSG.innerHTML = '冲破全关！您成功打掉' + SUM + '个砖块';
+      MSG.classList.remove('hide');
+      return;
+    }
+
+    // 初始化木块位置
+    w.w = WIDTH / 5;
+    w.h = bH / 2;
+    w.x = WIDTH / 2 - WIDTH / 5 /2;
+    w.y = HEIGHT - bH / 2;
+    // 初始化球位置
+    c.x = w.x + w.w / 2;
+    c.y = w.y - bH / 4;
+    init(cxt);
   }
 
   // 清空
@@ -189,7 +230,7 @@
     drawGlobe(cxt, c);
   }
 
-  // 提示信息
+  // TODO:提示信息css3
   function flyAlert(cxt,msg){
     cxt.beginPath();
     cxt.strokeStyle = 'red';
@@ -206,6 +247,12 @@
         break;
       case bricksColors[3]:
         lazy(c);
+        break;
+      case bricksColors[4]:
+        long(w);
+        break;
+      case bricksColors[5]:
+        short(w);
         break;
     }
 
@@ -226,6 +273,34 @@
       setTimeout(function(){
         c.xs *= 2;
         c.ys *= 2;
+      },7000)
+    }
+
+    // 加长模板1.5倍
+    function long(w){
+      var l = w.w * 1.5;
+      var pre = l - w.w;
+      w.w = l;
+      w.x -= pre / 2;
+      setTimeout(function(){
+        var l = w.w / 1.5;
+        var pre = w.w - l;
+        w.w = l;
+        w.x += pre / 2;
+      },7000)
+    }
+
+    // 缩短模板
+    function short(w){
+      var l = w.w / 1.5;
+      var pre = w.w - l;
+      w.w = l;
+      w.x += pre / 2;
+      setTimeout(function(){
+        var l = w.w * 1.5;
+        var pre = l - w.w;
+        w.w = l;
+        w.x -= pre / 2;
       },7000)
     }
   }
@@ -301,70 +376,95 @@
   // 结束
   function over(){
     window.canGo = false;
-    alert('游戏结束！您仅仅打掉' + SUM + '个砖块');
-    window.location.reload();
+    cancelEvent();
+    if(SUM<20){
+      MSG.innerHTML = '游戏结束！您仅仅打掉了' + SUM + '个砖块，加加油！';
+    }else if(SUM<50){
+      MSG.innerHTML = '游戏结束！您仅打掉了' + SUM + '个砖块，加油！';
+    }else if(SUM<100){
+      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，快可以做点什么了';
+    }else if(SUM<150){
+      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以为汪星人盖一个家';
+    }else if(SUM<200){
+      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以盖一个洗手间';
+    }else if(SUM<250){
+      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以盖一个单人间';
+    }else if(SUM<300){
+      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以盖一个双人间';
+    }else if(SUM<350){
+      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以盖一个三人间';
+    }else if(SUM>=520){
+      MSG.innerHTML = '游戏结束！您打掉了' + SUM + '个砖块，可以盖一个温暖的家';
+    }
+    MSG.classList.remove('hide');
   }
 
-  // 事件绑定
-  function bindEvent(cxt) {
-
-    // 开始
-    on(UP, goUp);
-    function goUp(){
-      if(window.canGo)return;
-      window.canGo=true;
-      go(cxt);
-    }
-
-    // 停止
-    on(DOWN, function(){
-      window.canGo=false;
-    });
-
-    // 左移动
-    on(LEFT, goLeft);
-    function goLeft(){
-      if(w.x <= 0)return;
-      w.x-=30;
-      if(!window.canGo){
-        c.x-=30;
-        init(cxt);
-      };
-    }
-    // 右移动
-    on(RIGHT, goRight);
-    function goRight(){
-      if(w.x + w.w >= WIDTH)return;
-      w.x+=30;
-      if(!window.canGo){
-        c.x+=30;
-        init(cxt);
-      };
-    }
-    // 移动端
-    canvas.addEventListener('touchend',function(e){
+  // 事件列表
+  var eventMap = {
+    goUp:function (e){
+      if(e.keyCode === UP || e === 'touch'){
+        if(window.canGo)return;
+        window.canGo=true;
+        go(cxt);
+      }
+    },
+    goLeft:function (e){
+      if(e.keyCode === LEFT || e === 'touch'){
+        if(w.x <= 0)return;
+        w.x-=30;
+        if(!window.canGo){
+          c.x-=30;
+          init(cxt);
+        };
+      }
+    },
+    goRight:function (e){
+      if(e.keyCode === RIGHT || e === 'touch'){
+        if(w.x + w.w >= WIDTH)return;
+        w.x+=30;
+        if(!window.canGo){
+          c.x+=30;
+          init(cxt);
+        };
+      }
+    },
+    stop:function(e){
+      if(e.keyCode === DOWN){
+        window.canGo=false;
+      }
+    },
+    touch:function(e){
       var x = e.changedTouches[0].pageX;
       var y = e.changedTouches[0].pageY;
       if(y > HEIGHT / 2){ // 下半屏幕
         if(x > WIDTH / 2){ // 左右移动
-          goRight();
+          eventMap.goRight('touch');
         }else{
-          goLeft();
+          eventMap.goLeft('touch');
         }
       }else{
-        goUp();
+        eventMap.goUp('touch');
       }
-    })
-
-    // 键盘按下
-    function on(keyCode,cb){
-      document.body.addEventListener('keydown', function(e){
-        e.preventDefault();
-        if(e.keyCode === keyCode){
-          cb();
-        }
-      })
     }
+  }
+  // 事件绑定
+  function bindEvent(cxt) {
+    // 移动端
+    canvas.addEventListener('touchend', eventMap.touch);
+    // 键盘按下
+    ['goUp', 'stop', 'goLeft', 'goRight'].forEach(function(item){
+      document.body.addEventListener('keydown', eventMap[item]);
+    });
+  }
+
+  // 取消事件监听
+  function cancelEvent(){
+    // 移动端
+    canvas.removeEventListener('touchend', eventMap.touch);
+    // 键盘按下
+    ['goUp', 'stop', 'goLeft', 'goRight'].forEach(function(item){
+      document.body.removeEventListener('keydown', eventMap[item]);
+    });
   }
 
   document.addEventListener('DOMContentLoaded', function(){
