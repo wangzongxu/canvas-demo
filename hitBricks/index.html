@@ -473,7 +473,7 @@
     });
     // 再来一次
     AGAIN.addEventListener('click',function(){
-      window.location.reload();
+      window.location.href = window.location.href;
     })
   }
 
@@ -487,9 +487,9 @@
     });
   }
 
-  window.addEventListener('load', function(){
+  // window.addEventListener('load', function(){
     init(cxt);
     bindEvent(cxt);
-  })
+  // })
 </script>
 </html>
