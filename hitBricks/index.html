@@ -122,12 +122,10 @@
   // 初始化
   function init(cxt){
     clearAll(cxt);
-    setTimeout(function(){
-      initBrick(cxt, curModel);
-      drawBrick(cxt, bricks);
-      drawWood(cxt, w);
-      drawGlobe(cxt, c);
-    })
+    initBrick(cxt, curModel);
+    drawBrick(cxt, bricks);
+    drawWood(cxt, w);
+    drawGlobe(cxt, c);
   }
 
   // 动画开始
@@ -490,7 +488,9 @@
   }
 
     // 加载开始
-    init(cxt);
-    bindEvent(cxt);
+    setTimeout({
+      init(cxt);
+      bindEvent(cxt);
+    },100)
 </script>
 </html>
