@@ -45,18 +45,75 @@
     .hide{
       display: none
     }
+    ul,li{
+      list-style: none
+    }
+    .follow{
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+    }
+    .follow:after{
+      display: block;
+      content: "";
+      clear: both;
+    }
+    .follow>li{
+      float: left;
+      text-align: center;
+      box-sizing: border-box;
+      width: 50%;
+      height: 50%;
+      padding-top: 50%;
+      font-size: larger;
+      background: rgba(255, 255, 255, 0.6);
+      color: rgba(121, 85, 72, 1);
+      border: 1px solid rgba(153,209,210,1);
+      -webkit-animation:op 2s linear 0s infinite;
+      animation:op 2s linear 0s infinite;
+    }
+    @keyframes op {
+      from{
+        opacity: 0.5
+      }50%{
+        opacity: 1
+      }to{
+        opacity: 0.5
+      }
+    }
+    -webkit-@keyframes op {
+      from{
+        opacity: 0.5
+      }50%{
+        opacity: 1
+      }to{
+        opacity: 0.5
+      }
+    }
+    .follow>li:first-child{
+      width: 100%
+    }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
   <p class="msg hide"></p>
   <p class="again hide">再次挑战</p>
+  <ul class="follow">
+    <li>发射</li>
+    <li>左移</li>
+    <li>右移</li>
+  </ul>
 </body>
 <script src="./model.js" charset="utf-8"></script>
 <script type="text/javascript">
   var screen = document.body.getBoundingClientRect();
   var MSG = document.querySelector('.msg');
   var AGAIN = document.querySelector('.again');
+  var FOLLOW = document.querySelector('.follow');
   var HEIGHT = screen.height;
   var WIDTH = screen.width;
   var MARGINTOP = 1;  // 上边距
@@ -475,6 +532,10 @@
     AGAIN.addEventListener('click',function(){
       window.location.href = window.location.href + '?_=' + Date.now();
     })
+    // 取消指引
+    FOLLOW.addEventListener('click',function(){
+      this.classList.add('hide');
+    })
   }
 
   // 取消事件监听
@@ -487,7 +548,7 @@
     });
   }
 
-    // 加载开始
+    // 加载开始 微信DOMContentLoaded和load事件导致页面canvas有时加载白屏
     setTimeout(function(){
       init(cxt);
       bindEvent(cxt);
