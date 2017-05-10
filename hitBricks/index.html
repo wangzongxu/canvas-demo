@@ -138,6 +138,8 @@
     3: 'rgba(28, 179, 26, 0.41)', // 减速砖块 标识 3
     4: 'rgba(0, 153, 235, 0.55)', // 加长模板 标识 4
     5: 'rgba(170, 172, 184, 0.72)', // 缩短模板 标识 5
+    6: 'rgba(156, 39, 176, 0.72)', // 消除 标识 6
+    7: 'rgba(255, 235, 59, 0.5)', // 返回起点 标识 7
   }
 
   // 木头宽高 & 初始坐标 & 颜色
@@ -157,6 +159,7 @@
     colors: 'rgb(229,71,70)',
     xs: 2, // x 速度
     ys: 2, // y 速度
+    reset: false // effect 回到起点
   }
 
   var canvas = document.getElementById('canvas');
@@ -177,9 +180,11 @@
   })();
 
   // 初始化
-  function init(cxt){
+  function init(cxt, noChangeBricks){ // 第二个参数代表不重置砖块
     clearAll(cxt);
-    initBrick(cxt, curModel);
+    if(!noChangeBricks){
+      initBrick(cxt, curModel);
+    }
     drawBrick(cxt, bricks);
     drawWood(cxt, w);
     drawGlobe(cxt, c);
@@ -202,14 +207,8 @@
     })
   }
 
-  // 下一关
-  function nextModel(){
-    window.canGo = false;
-    curModel = window.brickModel[++ INDEX];
-    if(!curModel){ // 没有模板了从第一个开始
-      INDEX = 0;
-      curModel = window.brickModel[INDEX];
-    }
+  // 恢复木块与小球位置
+  function resetCirAndWood(){
     // 初始化木块位置
     w.w = WIDTH / 5;
     w.h = bH / 2;
@@ -218,6 +217,17 @@
     // 初始化球位置
     c.x = w.x + w.w / 2;
     c.y = w.y - bH / 4;
+  }
+
+  // 下一关
+  function nextModel(){
+    window.canGo = false;
+    curModel = window.brickModel[++ INDEX];
+    if(!curModel){ // 没有模板了从第一个开始
+      INDEX = 0;
+      curModel = window.brickModel[INDEX];
+    }
+    resetCirAndWood();
     init(cxt);
   }
 
@@ -277,10 +287,18 @@
 
   // 球的运动处理
   function runingGlobe(cxt,c){
-    c.x -= c.xs;
+    c.x += c.xs;
     c.y -= c.ys;
 
-    collisionOf(c,w);
+    collisionOf(c,w, function(){
+      if(c.reset){ // 上一次打到了回到起点的效果
+        c.reset = false;
+        window.canGo = false;
+        resetCirAndWood();
+        init(cxt, 'noChangeBricks');
+        return;
+      }
+    });
     collisionWall(c);
 
     for(var i = 0; i < bricks.length; i++){
@@ -289,8 +307,8 @@
       collisionOf(c, brick, function(){
         isCollisioned = true;
         SUM += 1;
-        brickEffect(brick.color);
         bricks.splice(i, 1);
+        brickEffect(brick.color);
       });
       if(isCollisioned){
         break;
@@ -322,6 +340,12 @@
         break;
       case bricksColors[5]:
         short(w);
+        break;
+      case bricksColors[6]:
+        boom();
+        break;
+      case bricksColors[7]:
+        reset(c);
         break;
     }
 
@@ -371,6 +395,33 @@
         w.w = l;
         w.x -= pre / 2;
       },7000)
+    }
+
+    // 随机删除
+    function boom(){
+      if(bricks.length < 2)return; // 最少两个
+      var num = Math.floor(bricks.length / 2); // 消除个数
+      rm();
+      function rm(){
+        animationFrame(function(){
+          bricks.splice(random(), 1);
+          SUM++;
+          if(--num){
+            rm();
+          }
+        })
+      }
+      function random(){// 取一个 0 到 bricks.length - 1 作为索引
+        var len = bricks.length - 1;
+        return Math.round(
+          Math.random() * len
+        )
+      }
+    }
+
+    // 回到起点
+    function reset(){
+      c.reset = true;
     }
   }
 
@@ -516,6 +567,17 @@
           eventMap.goLeft('touch');
         }
       }else{
+        if(!window.canGo){ // 没有运行的时候才可以更改发射方向
+          if(x > WIDTH / 2){ // 右上屏幕  左右发射方向
+            if(c.xs < 0){ // 本应该向右 大于零
+              c.xs *= -1;
+            }
+          }else{ // 左上屏幕
+            if(c.xs > 0){ // 本应该向左 小于零
+              c.xs *= -1;
+            }
+          }
+        }
         eventMap.goUp('touch');
       }
     }
@@ -548,10 +610,17 @@
     });
   }
 
-    // 加载开始 微信DOMContentLoaded和load事件导致页面canvas有时加载白屏
-    setTimeout(function(){
-      init(cxt);
-      bindEvent(cxt);
-    },100)
+  // pc不显示指引
+  ;(function(){
+    if(!/Mobile/i.test(navigator.userAgent)){
+      FOLLOW.classList.add('hide');
+    }
+  })();
+
+  // 加载开始 微信DOMContentLoaded和load事件导致页面canvas有时加载白屏
+  setTimeout(function(){
+    init(cxt);
+    bindEvent(cxt);
+  },100)
 </script>
 </html>
