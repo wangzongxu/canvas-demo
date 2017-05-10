@@ -122,10 +122,12 @@
   // 初始化
   function init(cxt){
     clearAll(cxt);
-    initBrick(cxt, curModel);
-    drawBrick(cxt, bricks);
-    drawWood(cxt, w);
-    drawGlobe(cxt, c);
+    setTimeout(function(){
+      initBrick(cxt, curModel);
+      drawBrick(cxt, bricks);
+      drawWood(cxt, w);
+      drawGlobe(cxt, c);
+    },100)
   }
 
   // 动画开始
@@ -487,9 +489,8 @@
     });
   }
 
-  // window.addEventListener('load', function(){
+    // 加载开始
     init(cxt);
     bindEvent(cxt);
-  // })
 </script>
 </html>
