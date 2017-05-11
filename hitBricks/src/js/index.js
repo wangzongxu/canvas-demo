@@ -1,3 +1,4 @@
+// 代码风格，随意而写：
 var screen = document.body.getBoundingClientRect();
 var MSG = document.querySelector('.msg');
 var AGAIN = document.querySelector('.again');

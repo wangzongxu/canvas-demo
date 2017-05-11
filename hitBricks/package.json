@@ -1,0 +1,25 @@
+{
+  "name": "hitBricks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "build": "node build/build.js",
+    "dev": "node_modules/.bin/webpack-dev-server --config build/dev.js --open"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "css-loader": "^0.28.1",
+    "extract-text-webpack-plugin": "^2.1.0",
+    "html-webpack-plugin": "^2.28.0",
+    "rimraf": "^2.6.1",
+    "style-loader": "^0.17.0",
+    "webpack": "^2.5.1",
+    "webpack-dev-server": "^2.4.5",
+    "webpack-hot-middleware": "^2.18.0",
+    "webpack-merge": "^4.1.0"
+  },
+  "dependencies": {}
+}
