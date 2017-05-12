@@ -84,10 +84,8 @@ canvas.width = WIDTH;
   // 平台处理
   if(!/Mobile/i.test(navigator.userAgent)){ // pc不显示指引
     FOLLOW.classList.add('hide');
-  }else{ // 移动禁止默认事件（长按出现的菜单）
-    window.ontouchstart = function(e) { e.preventDefault(); };
   }
-
+  
 })();
 
 // 初始化
