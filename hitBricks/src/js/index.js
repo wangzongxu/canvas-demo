@@ -60,21 +60,34 @@ var c = {
   reset: false // effect 回到起点
 }
 
+// canvas
 var canvas = document.getElementById('canvas');
 var cxt = canvas.getContext('2d');
 canvas.height = HEIGHT;
 canvas.width = WIDTH;
 
-// API兼容
-window.animationFrame = (function(){
-  return  window.requestAnimationFrame       ||
-          window.webkitRequestAnimationFrame ||
-          window.mozRequestAnimationFrame    ||
-          window.msRequestAnimationFrame    ||
-          window.oRequestAnimationFrame    ||
-          function( callback ){
-            window.setTimeout(callback, 1000 / 60);
-          };
+// pc不显示指引
+;(function(){
+
+  // API兼容
+  window.animationFrame = (function(){
+    return  window.requestAnimationFrame       ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame    ||
+            window.msRequestAnimationFrame    ||
+            window.oRequestAnimationFrame    ||
+            function( callback ){
+              window.setTimeout(callback, 1000 / 60);
+            };
+  })();
+
+  // 平台处理
+  if(!/Mobile/i.test(navigator.userAgent)){ // pc不显示指引
+    FOLLOW.classList.add('hide');
+  }else{ // 移动禁止默认事件（长按出现的菜单）
+    window.ontouchstart = function(e) { e.preventDefault(); };
+  }
+
 })();
 
 // 初始化
@@ -511,14 +524,6 @@ function cancelEvent(){
     document.body.removeEventListener('keydown', eventMap[item]);
   });
 }
-
-// pc不显示指引
-;(function(){
-  if(!/Mobile/i.test(navigator.userAgent)){
-    FOLLOW.classList.add('hide');
-    window.ontouchstart = function(e) { e.preventDefault(); };
-  }
-})();
 
 // 加载开始 微信DOMContentLoaded和load事件导致页面canvas有时加载白屏
 setTimeout(function(){
