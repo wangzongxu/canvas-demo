@@ -516,6 +516,7 @@ function cancelEvent(){
 ;(function(){
   if(!/Mobile/i.test(navigator.userAgent)){
     FOLLOW.classList.add('hide');
+    window.ontouchstart = function(e) { e.preventDefault(); };
   }
 })();
 
